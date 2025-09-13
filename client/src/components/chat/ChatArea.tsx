@@ -9,7 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageBubble } from "./MessageBubble";
-import { Shield, Phone, Video, Info, Paperclip, Smile, Send } from "lucide-react";
+import {
+  Shield,
+  Phone,
+  Video,
+  Info,
+  Paperclip,
+  Smile,
+  Send,
+} from "lucide-react";
 import type { User, ContactWithUser, MessageWithUsers } from "@shared/schema";
 
 interface ChatAreaProps {
@@ -68,48 +76,66 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
   useEffect(() => {
     const handleNewMessage = (event: CustomEvent) => {
       const newMessage = event.detail;
-      if (selectedContact && 
-          (newMessage.senderId === selectedContact.contactUser.id || 
-           newMessage.recipientId === selectedContact.contactUser.id)) {
-        queryClient.invalidateQueries({ queryKey: ["/api/messages", selectedContact.contactUser.id] });
+      if (
+        selectedContact &&
+        (newMessage.senderId === selectedContact.contactUser.id ||
+          newMessage.recipientId === selectedContact.contactUser.id)
+      ) {
+        queryClient.invalidateQueries({
+          queryKey: ["/api/messages", selectedContact.contactUser.id],
+        });
       }
     };
 
     const handleTyping = (data: any) => {
       if (data.senderId === selectedContact?.contactUser.id) {
         if (data.isTyping) {
-          setTypingUsers(prev => [...prev.filter(id => id !== data.senderId), data.senderId]);
+          setTypingUsers((prev) => [
+            ...prev.filter((id) => id !== data.senderId),
+            data.senderId,
+          ]);
         } else {
-          setTypingUsers(prev => prev.filter(id => id !== data.senderId));
+          setTypingUsers((prev) => prev.filter((id) => id !== data.senderId));
         }
       }
     };
 
     const handleMessageDelivered = (data: any) => {
       // Update the message in the cache to mark it as delivered
-      queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedContact?.contactUser.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/messages", selectedContact?.contactUser.id],
+      });
     };
 
     const handleMessageRead = (data: any) => {
       // Update the message in the cache to mark it as read
-      queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedContact?.contactUser.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/messages", selectedContact?.contactUser.id],
+      });
     };
 
-    window.addEventListener('newMessage', handleNewMessage as EventListener);
-    webSocketService.onMessage('typing', handleTyping);
-    webSocketService.onMessage('messageDelivered', handleMessageDelivered);
-    webSocketService.onMessage('messageRead', handleMessageRead);
+    window.addEventListener("newMessage", handleNewMessage as EventListener);
+    webSocketService.onMessage("typing", handleTyping);
+    webSocketService.onMessage("messageDelivered", handleMessageDelivered);
+    webSocketService.onMessage("messageRead", handleMessageRead);
 
     return () => {
-      window.removeEventListener('newMessage', handleNewMessage as EventListener);
-      webSocketService.offMessage('typing');
-      webSocketService.offMessage('messageDelivered');
-      webSocketService.offMessage('messageRead');
+      window.removeEventListener(
+        "newMessage",
+        handleNewMessage as EventListener
+      );
+      webSocketService.offMessage("typing");
+      webSocketService.offMessage("messageDelivered");
+      webSocketService.offMessage("messageRead");
     };
   }, [selectedContact, queryClient]);
 
   const handleSendMessage = async () => {
-    if (!message.trim() || !selectedContact || !selectedContact.contactUser.publicKey) {
+    if (
+      !message.trim() ||
+      !selectedContact ||
+      !selectedContact.contactUser.publicKey
+    ) {
       if (!selectedContact?.contactUser.publicKey) {
         toast({
           title: "Error",
@@ -127,7 +153,7 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
         selectedContact.contactUser.publicKey,
         currentUser.id
       );
-      
+
       setMessage("");
       stopTyping();
     } catch (error) {
@@ -160,13 +186,17 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
 
   const handleMessageChange = (value: string) => {
     setMessage(value);
-    
+
     if (!selectedContact) return;
 
     // Send typing indicator
     if (value && !isTyping) {
       setIsTyping(true);
-      webSocketService.sendTypingIndicator(selectedContact.contactUser.id, currentUser.id, true);
+      webSocketService.sendTypingIndicator(
+        selectedContact.contactUser.id,
+        currentUser.id,
+        true
+      );
     }
 
     // Clear previous timeout
@@ -183,7 +213,11 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
   const stopTyping = () => {
     if (isTyping && selectedContact) {
       setIsTyping(false);
-      webSocketService.sendTypingIndicator(selectedContact.contactUser.id, currentUser.id, false);
+      webSocketService.sendTypingIndicator(
+        selectedContact.contactUser.id,
+        currentUser.id,
+        false
+      );
     }
   };
 
@@ -206,18 +240,24 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
 
   if (!selectedContact) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-background to-muted/30" data-testid="chat-area-empty">
+      <div
+        className="flex-1 flex items-center justify-center bg-gradient-to-b from-background to-muted/30"
+        data-testid="chat-area-empty"
+      >
         <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Shield className="w-10 h-10 text-primary" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">SecureChat</h3>
+          <h3 className="text-xl font-semibold mb-2">PruKt</h3>
           <p className="text-muted-foreground mb-4">
-            Select a contact to start a secure, end-to-end encrypted conversation.
+            Select a contact to start a secure, end-to-end encrypted
+            conversation.
           </p>
           <div className="flex items-center justify-center gap-2 text-sm text-primary">
             <Shield className="w-4 h-4" />
-            <span>All messages are protected with military-grade encryption</span>
+            <span>
+              All messages are protected with military-grade encryption
+            </span>
           </div>
         </div>
       </div>
@@ -232,7 +272,9 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar className="w-10 h-10">
-                <AvatarImage src={selectedContact.contactUser.profileImageUrl || ""} />
+                <AvatarImage
+                  src={selectedContact.contactUser.profileImageUrl || ""}
+                />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {getInitials(selectedContact.contactUser)}
                 </AvatarFallback>
@@ -246,18 +288,35 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
                 </h3>
                 <Shield className="w-4 h-4 text-primary" />
               </div>
-              <p className="text-sm text-primary font-medium">Online • End-to-end encrypted</p>
+              <p className="text-sm text-primary font-medium">
+                Online • End-to-end encrypted
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" title="Voice call" data-testid="button-voice-call">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Voice call"
+              data-testid="button-voice-call"
+            >
               <Phone className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" title="Video call" data-testid="button-video-call">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Video call"
+              data-testid="button-video-call"
+            >
               <Video className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" title="Chat info" data-testid="button-chat-info">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Chat info"
+              data-testid="button-chat-info"
+            >
               <Info className="w-4 h-4" />
             </Button>
           </div>
@@ -265,13 +324,19 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-background to-muted/30" data-testid="messages-area">
+      <div
+        className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-background to-muted/30"
+        data-testid="messages-area"
+      >
         {/* Encryption Notice */}
         <div className="flex justify-center mb-6">
           <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-2 max-w-md">
             <div className="flex items-center gap-2 text-sm text-primary font-medium">
               <Shield className="w-4 h-4" />
-              <span>Messages are end-to-end encrypted. Only you and {getDisplayName(selectedContact.contactUser)} can see them.</span>
+              <span>
+                Messages are end-to-end encrypted. Only you and{" "}
+                {getDisplayName(selectedContact.contactUser)} can see them.
+              </span>
             </div>
           </div>
         </div>
@@ -282,7 +347,9 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
           </div>
         ) : (messages as MessageWithUsers[]).length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+            <p className="text-muted-foreground">
+              No messages yet. Start the conversation!
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -299,9 +366,14 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
 
         {/* Typing Indicator */}
         {typingUsers.length > 0 && (
-          <div className="flex items-start gap-3 mt-4" data-testid="typing-indicator">
+          <div
+            className="flex items-start gap-3 mt-4"
+            data-testid="typing-indicator"
+          >
             <Avatar className="w-8 h-8">
-              <AvatarImage src={selectedContact.contactUser.profileImageUrl || ""} />
+              <AvatarImage
+                src={selectedContact.contactUser.profileImageUrl || ""}
+              />
               <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                 {getInitials(selectedContact.contactUser)}
               </AvatarFallback>
@@ -310,12 +382,20 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
               <div className="bg-white border border-border rounded-lg px-4 py-3">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                  <div
+                    className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"
+                    style={{ animationDelay: "0.4s" }}
+                  ></div>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <span>{getDisplayName(selectedContact.contactUser)} is typing...</span>
+                <span>
+                  {getDisplayName(selectedContact.contactUser)} is typing...
+                </span>
               </div>
             </div>
           </div>
@@ -327,7 +407,12 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
       {/* Message Input */}
       <div className="p-4 bg-white border-t border-border">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" title="Attach file" data-testid="button-attach">
+          <Button
+            variant="ghost"
+            size="sm"
+            title="Attach file"
+            data-testid="button-attach"
+          >
             <Paperclip className="w-4 h-4" />
           </Button>
 

@@ -17,17 +17,22 @@ export default function Landing() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4">
             <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">SecureChat</h1>
-          <p className="text-muted-foreground">End-to-end encrypted messaging</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">PruKt</h1>
+          <p className="text-muted-foreground">
+            End-to-end encrypted messaging
+          </p>
         </div>
 
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-3 mb-2">
             <Lock className="w-5 h-5 text-primary" />
-            <span className="font-medium text-sm">Your privacy is protected</span>
+            <span className="font-medium text-sm">
+              Your privacy is protected
+            </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Messages are encrypted end-to-end. Only you and your contacts can read them.
+            Messages are encrypted end-to-end. Only you and your contacts can
+            read them.
           </p>
         </div>
 

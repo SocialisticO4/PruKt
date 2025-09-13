@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 
 const app = express();
 app.use(express.json());
@@ -37,7 +38,94 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  let server: Server;
+
+  if (process.env.P2P_ONLY === "true") {
+    // Minimal server with only P2P signaling endpoint, no DB or auth
+    const httpServer = createServer(app);
+
+    const p2pWss = new WebSocketServer({ server: httpServer, path: "/p2p" });
+    const pinRooms = new Map<string, Set<WebSocket>>();
+    const socketToPin = new Map<WebSocket, string>();
+
+    const sendJson = (socket: WebSocket, payload: any) => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(payload));
+      }
+    };
+
+    p2pWss.on("connection", (ws: WebSocket) => {
+      ws.on("message", (data) => {
+        let msg: any;
+        try {
+          msg = JSON.parse(data.toString());
+        } catch {
+          sendJson(ws, { type: "error", message: "Invalid JSON" });
+          return;
+        }
+
+        if (msg.type === "join") {
+          const pin: string = String(msg.pin || "").trim();
+          if (!/^\d{6}$/.test(pin)) {
+            sendJson(ws, { type: "error", message: "PIN must be 6 digits" });
+            return;
+          }
+
+          const room = pinRooms.get(pin) || new Set<WebSocket>();
+          if (room.size >= 2) {
+            sendJson(ws, { type: "roomFull", pin });
+            return;
+          }
+
+          room.add(ws);
+          pinRooms.set(pin, room);
+          socketToPin.set(ws, pin);
+          sendJson(ws, { type: "joined", pin, occupants: room.size });
+
+          for (const peer of room) {
+            if (peer !== ws) sendJson(peer, { type: "peerJoined" });
+          }
+
+          if (room.size === 2) {
+            for (const peer of room) sendJson(peer, { type: "ready" });
+          }
+        } else if (msg.type === "signal") {
+          const pin = socketToPin.get(ws);
+          if (!pin) return;
+          const room = pinRooms.get(pin);
+          if (!room) return;
+          for (const peer of room) {
+            if (peer !== ws) sendJson(peer, { type: "signal", data: msg.data });
+          }
+        } else if (msg.type === "leave") {
+          const pin = socketToPin.get(ws);
+          if (!pin) return;
+          const room = pinRooms.get(pin);
+          if (!room) return;
+          room.delete(ws);
+          socketToPin.delete(ws);
+          for (const peer of room) sendJson(peer, { type: "peerLeft" });
+          if (room.size === 0) pinRooms.delete(pin);
+        }
+      });
+
+      ws.on("close", () => {
+        const pin = socketToPin.get(ws);
+        if (!pin) return;
+        const room = pinRooms.get(pin);
+        if (!room) return;
+        room.delete(ws);
+        socketToPin.delete(ws);
+        for (const peer of room) sendJson(peer, { type: "peerLeft" });
+        if (room.size === 0) pinRooms.delete(pin);
+      });
+    });
+
+    server = httpServer;
+  } else {
+    const { registerRoutes } = await import("./routes");
+    server = await registerRoutes(app);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -56,16 +144,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  // Serve on PORT or 5000. Avoid reusePort for Windows compatibility.
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });
 })();

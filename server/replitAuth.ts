@@ -8,8 +8,8 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+if (process.env.P2P_ONLY === "true") {
+  // Skip auth entirely in P2P-only mode
 }
 
 const getOidcConfig = memoize(
@@ -54,9 +54,7 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(
-  claims: any,
-) {
+async function upsertUser(claims: any) {
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
@@ -85,15 +83,15 @@ export async function setupAuth(app: Express) {
   };
 
   const domains = process.env.REPLIT_DOMAINS!.split(",");
-  
+
   // Add localhost support for development
-  if (process.env.NODE_ENV === 'development') {
-    domains.push('localhost');
+  if (process.env.NODE_ENV === "development") {
+    domains.push("localhost");
   }
 
   for (const domain of domains) {
-    const protocol = domain === 'localhost' ? 'http' : 'https';
-    const port = domain === 'localhost' ? ':5000' : '';
+    const protocol = domain === "localhost" ? "http" : "https";
+    const port = domain === "localhost" ? ":5000" : "";
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
@@ -101,7 +99,7 @@ export async function setupAuth(app: Express) {
         scope: "openid email profile offline_access",
         callbackURL: `${protocol}://${domain}${port}/api/callback`,
       },
-      verify,
+      verify
     );
     passport.use(strategy);
   }

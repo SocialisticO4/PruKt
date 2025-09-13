@@ -27,8 +27,12 @@ export class WebSocketService {
   connect(userId: string): Promise<void> {
     this.currentUserId = userId;
     return new Promise((resolve, reject) => {
+      const configuredUrl = (import.meta as any).env?.VITE_SERVER_WS_URL as
+        | string
+        | undefined;
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const defaultUrl = `${protocol}//${window.location.host}/ws`;
+      const wsUrl = configuredUrl && configuredUrl.length > 0 ? configuredUrl : defaultUrl;
       
       this.ws = new WebSocket(wsUrl);
 

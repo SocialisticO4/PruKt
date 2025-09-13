@@ -6,7 +6,13 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Shield, Search, Plus, Settings, LogOut, UserPlus } from "lucide-react";
 import type { User, ContactWithUser } from "@shared/schema";
 
@@ -16,7 +22,11 @@ interface ContactsListProps {
   onSelectContact: (contact: ContactWithUser) => void;
 }
 
-export function ContactsList({ currentUser, selectedContact, onSelectContact }: ContactsListProps) {
+export function ContactsList({
+  currentUser,
+  selectedContact,
+  onSelectContact,
+}: ContactsListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,10 +84,17 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
     window.location.href = "/api/logout";
   };
 
-  const filteredContacts = (contacts as ContactWithUser[]).filter((contact: ContactWithUser) =>
-    contact.contactUser.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.contactUser.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.contactUser.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredContacts = (contacts as ContactWithUser[]).filter(
+    (contact: ContactWithUser) =>
+      contact.contactUser.firstName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      contact.contactUser.lastName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      contact.contactUser.email
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase())
   );
 
   const getInitials = (user: User) => {
@@ -98,7 +115,10 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
   };
 
   return (
-    <div className="w-80 bg-white border-r border-border flex flex-col" data-testid="contacts-list">
+    <div
+      className="w-80 bg-white border-r border-border flex flex-col"
+      data-testid="contacts-list"
+    >
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
@@ -107,7 +127,7 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
               <Shield className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">SecureChat</h2>
+              <h2 className="font-bold text-lg">PruKt</h2>
               <div className="flex items-center gap-1 text-xs text-primary">
                 <Shield className="w-3 h-3" />
                 <span>End-to-end encrypted</span>
@@ -115,12 +135,22 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" title="Settings" data-testid="button-settings">
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Settings"
+              data-testid="button-settings"
+            >
               <Settings className="w-4 h-4" />
             </Button>
             <Dialog open={addContactOpen} onOpenChange={setAddContactOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" title="Add Contact" data-testid="button-add-contact">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  title="Add Contact"
+                  data-testid="button-add-contact"
+                >
                   <Plus className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
@@ -156,8 +186,12 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium text-sm">{getDisplayName(user)}</p>
-                              <p className="text-xs text-muted-foreground">{user.email}</p>
+                              <p className="font-medium text-sm">
+                                {getDisplayName(user)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {user.email}
+                              </p>
                             </div>
                           </div>
                           <Button
@@ -172,9 +206,13 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
                       ))}
                     </div>
                   )}
-                  {userSearchQuery && !searchLoading && (searchResults as User[]).length === 0 && (
-                    <p className="text-center text-muted-foreground py-4">No users found</p>
-                  )}
+                  {userSearchQuery &&
+                    !searchLoading &&
+                    (searchResults as User[]).length === 0 && (
+                      <p className="text-center text-muted-foreground py-4">
+                        No users found
+                      </p>
+                    )}
                 </div>
               </DialogContent>
             </Dialog>
@@ -204,7 +242,9 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
         ) : filteredContacts.length === 0 ? (
           <div className="p-4 text-center">
             <p className="text-muted-foreground text-sm">
-              {(contacts as ContactWithUser[]).length === 0 ? "No contacts yet. Add some contacts to start chatting!" : "No contacts match your search"}
+              {(contacts as ContactWithUser[]).length === 0
+                ? "No contacts yet. Add some contacts to start chatting!"
+                : "No contacts match your search"}
             </p>
           </div>
         ) : (
@@ -220,7 +260,9 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src={contact.contactUser.profileImageUrl || ""} />
+                    <AvatarImage
+                      src={contact.contactUser.profileImageUrl || ""}
+                    />
                     <AvatarFallback className="bg-primary text-primary-foreground">
                       {getInitials(contact.contactUser)}
                     </AvatarFallback>
@@ -229,7 +271,9 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium truncate">{getDisplayName(contact.contactUser)}</span>
+                    <span className="font-medium truncate">
+                      {getDisplayName(contact.contactUser)}
+                    </span>
                     <Shield className="w-3 h-3 text-primary" />
                   </div>
                   <p className="text-sm text-muted-foreground truncate">
@@ -256,7 +300,9 @@ export function ContactsList({ currentUser, selectedContact, onSelectContact }: 
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">{getDisplayName(currentUser)}</span>
+              <span className="font-medium text-sm">
+                {getDisplayName(currentUser)}
+              </span>
               <Shield className="w-3 h-3 text-primary" />
             </div>
             <span className="text-sm text-muted-foreground">Online</span>
