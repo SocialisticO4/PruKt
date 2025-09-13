@@ -95,14 +95,14 @@ export class P2PService {
 
   private handleSignal = async (evt: SignalingEvent) => {
     try {
-      if (evt.type === "ready") {
+      if (evt.type === "joined") {
+        // Decide roles deterministically: first occupant becomes offerer
+        // occupants === 1 -> first joiner (offerer), occupants === 2 -> second joiner (answerer)
+        this.isOfferer = evt.occupants === 1;
+      } else if (evt.type === "ready") {
         // Both peers present. Create or respond to offer.
         if (!this.peer) this.createPeer();
         this.emit({ type: "connecting" });
-        if (!this.isOfferer) {
-          // Decide offerer by random to reduce glare; if dataChannel doesn't exist, become offerer
-          this.isOfferer = !this.dataChannel;
-        }
         // Prepare ephemeral keys for ECDH
         if (!this.ephPriv) {
           const { privateKey, publicJwk } = await generateEphemeralKeyPair();
