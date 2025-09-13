@@ -153,7 +153,13 @@ export class P2PService {
   };
 
   private createPeer(): void {
-    this.peer = new RTCPeerConnection({ iceServers: this.config.iceServers });
+    const forceTurn = (import.meta as any).env?.VITE_FORCE_TURN === "1";
+    this.peer = new RTCPeerConnection({
+      iceServers: this.config.iceServers,
+      iceTransportPolicy: forceTurn
+        ? ("relay" as RTCIceTransportPolicy)
+        : undefined,
+    });
     this.peer.onicecandidate = (ev) => {
       if (ev.candidate) {
         signalingService.sendSignal({ candidate: ev.candidate });

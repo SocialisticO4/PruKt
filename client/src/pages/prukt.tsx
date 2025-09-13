@@ -18,6 +18,35 @@ import {
   type StoredMessage,
 } from "@/lib/localStore";
 
+function DecryptedMessage({
+  pin,
+  message,
+}: {
+  pin: string;
+  message: StoredMessage;
+}) {
+  const [text, setText] = useState<string>("");
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    decryptMessageRecord(pin, message)
+      .then((t) => {
+        if (active) setText(t);
+      })
+      .catch(() => {
+        if (active) setFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [message.id, pin]);
+  return (
+    <span className={failed ? "italic text-red-600" : ""}>
+      {failed ? "Unable to decrypt" : text}
+    </span>
+  );
+}
+
 function generatePin(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -99,29 +128,6 @@ export default function P2PChat() {
     const list = await loadMessages(pin, pin);
     setMessages(list);
     setInput("");
-  };
-
-  const renderDecrypted = (m: StoredMessage) => {
-    const [text, setText] = useState<string>("");
-    const [failed, setFailed] = useState(false);
-    useEffect(() => {
-      let active = true;
-      decryptMessageRecord(pin, m)
-        .then((t) => {
-          if (active) setText(t);
-        })
-        .catch(() => {
-          if (active) setFailed(true);
-        });
-      return () => {
-        active = false;
-      };
-    }, [m.id, pin]);
-    return (
-      <span className={failed ? "italic text-red-600" : ""}>
-        {failed ? "Unable to decrypt" : text}
-      </span>
-    );
   };
 
   return (
@@ -297,7 +303,7 @@ export default function P2PChat() {
                         : "message-bubble-received"
                     } rounded-lg px-4 py-2 max-w-md`}
                   >
-                    {renderDecrypted(m)}
+                    <DecryptedMessage pin={pin} message={m} />
                   </div>
                 </div>
               ))}
