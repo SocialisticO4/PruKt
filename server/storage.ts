@@ -19,6 +19,7 @@ export interface IStorage {
   // User operations (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserPublicKey(userId: string, publicKey: string): Promise<void>;
   
   // Contact operations
   getContacts(userId: string): Promise<ContactWithUser[]>;
@@ -28,7 +29,9 @@ export interface IStorage {
   // Message operations
   getMessages(userId: string, contactId: string): Promise<MessageWithUsers[]>;
   sendMessage(message: InsertMessage): Promise<Message>;
+  markMessageAsDelivered(messageId: string): Promise<void>;
   markMessagesAsRead(userId: string, senderId: string): Promise<void>;
+  markMessageAsRead(messageId: string): Promise<void>;
   
   // Search operations
   searchUsers(query: string, currentUserId: string): Promise<User[]>;
@@ -54,6 +57,16 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUserPublicKey(userId: string, publicKey: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        publicKey,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
   }
   
   // Contact operations
@@ -119,16 +132,39 @@ export class DatabaseStorage implements IStorage {
     return newMessage;
   }
 
+  async markMessageAsDelivered(messageId: string): Promise<void> {
+    await db
+      .update(messages)
+      .set({ 
+        isDelivered: true, 
+        deliveredAt: new Date() 
+      })
+      .where(eq(messages.id, messageId));
+  }
+
   async markMessagesAsRead(userId: string, senderId: string): Promise<void> {
     await db
       .update(messages)
-      .set({ isRead: true })
+      .set({ 
+        isRead: true,
+        readAt: new Date() 
+      })
       .where(
         and(
           eq(messages.recipientId, userId),
           eq(messages.senderId, senderId)
         )
       );
+  }
+
+  async markMessageAsRead(messageId: string): Promise<void> {
+    await db
+      .update(messages)
+      .set({ 
+        isRead: true,
+        readAt: new Date() 
+      })
+      .where(eq(messages.id, messageId));
   }
   
   // Search operations

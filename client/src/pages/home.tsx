@@ -6,6 +6,7 @@ import { ChatArea } from "@/components/chat/ChatArea";
 import { encryptionService } from "@/lib/encryption";
 import { webSocketService } from "@/lib/websocket";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { apiRequest } from "@/lib/queryClient";
 import type { ContactWithUser } from "@shared/schema";
 
 export default function Home() {
@@ -38,9 +39,9 @@ export default function Home() {
           await webSocketService.connect(user.id);
           setIsEncryptionReady(true);
 
-          // TODO: Update user's public key on server
-          // const publicKey = encryptionService.getPublicKey();
-          // await updateUserPublicKey(publicKey);
+          // Update user's public key on server
+          const publicKey = encryptionService.getPublicKey();
+          await apiRequest("PUT", "/api/user/public-key", { publicKey });
         } catch (error) {
           console.error("Error initializing encryption:", error);
           if (error instanceof Error && isUnauthorizedError(error)) {

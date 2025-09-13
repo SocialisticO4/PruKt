@@ -90,6 +90,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark individual message as delivered
+  app.put('/api/messages/:messageId/delivered', isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      await storage.markMessageAsDelivered(messageId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking message as delivered:", error);
+      res.status(500).json({ message: "Failed to mark message as delivered" });
+    }
+  });
+
+  // Mark individual message as read  
+  app.put('/api/messages/:messageId/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const { messageId } = req.params;
+      await storage.markMessageAsRead(messageId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      res.status(500).json({ message: "Failed to mark message as read" });
+    }
+  });
+
+  // User public key update route
+  app.put('/api/user/public-key', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { publicKey } = req.body;
+      
+      if (!publicKey || typeof publicKey !== 'string') {
+        return res.status(400).json({ message: "Public key is required" });
+      }
+      
+      await storage.updateUserPublicKey(userId, publicKey);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating public key:", error);
+      res.status(500).json({ message: "Failed to update public key" });
+    }
+  });
+
   // Search routes
   app.get('/api/search/users', isAuthenticated, async (req: any, res) => {
     try {
@@ -139,21 +181,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Send to recipient if online
           const recipientWs = clients.get(message.recipientId);
           if (recipientWs && recipientWs.readyState === WebSocket.OPEN) {
+            // Mark as delivered immediately since recipient is online
+            await storage.markMessageAsDelivered(savedMessage.id);
+            
             recipientWs.send(JSON.stringify({
               type: 'newMessage',
               message: {
                 ...savedMessage,
+                isDelivered: true,
+                deliveredAt: new Date().toISOString(),
                 sender: { id: message.senderId }
               }
             }));
+            
+            // Notify sender about delivery
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'messageDelivered',
+                messageId: savedMessage.id
+              }));
+            }
           }
           
           // Confirm to sender
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
               type: 'messageSent',
-              messageId: savedMessage.id
+              messageId: savedMessage.id,
+              isDelivered: recipientWs ? true : false
             }));
+          }
+        } else if (message.type === 'messageRead') {
+          // Mark message as read and notify sender
+          await storage.markMessageAsRead(message.messageId);
+          
+          // Get message details to notify sender
+          const messages = await storage.getMessages(message.readerId, message.senderId);
+          const readMessage = messages.find(m => m.id === message.messageId);
+          
+          if (readMessage) {
+            // Notify sender about read receipt
+            const senderWs = clients.get(message.senderId);
+            if (senderWs && senderWs.readyState === WebSocket.OPEN) {
+              senderWs.send(JSON.stringify({
+                type: 'messageRead',
+                messageId: message.messageId,
+                readAt: new Date().toISOString()
+              }));
+            }
           }
         } else if (message.type === 'typing') {
           // Forward typing indicator to recipient

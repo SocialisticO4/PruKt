@@ -1,15 +1,19 @@
 import { encryptionService } from './encryption';
 
 export interface WebSocketMessage {
-  type: 'authenticate' | 'sendMessage' | 'newMessage' | 'messageSent' | 'typing' | 'error' | 'authenticated';
+  type: 'authenticate' | 'sendMessage' | 'newMessage' | 'messageSent' | 'messageDelivered' | 'messageRead' | 'typing' | 'error' | 'authenticated';
   userId?: string;
   senderId?: string;
   recipientId?: string;
+  readerId?: string;
   encryptedContent?: string;
   iv?: string;
   message?: any;
   messageId?: string;
   isTyping?: boolean;
+  isDelivered?: boolean;
+  readAt?: string;
+  deliveredAt?: string;
 }
 
 export class WebSocketService {
@@ -18,8 +22,10 @@ export class WebSocketService {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
+  private currentUserId: string | null = null;
 
   connect(userId: string): Promise<void> {
+    this.currentUserId = userId;
     return new Promise((resolve, reject) => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -90,6 +96,11 @@ export class WebSocketService {
             decryptedContent,
           }
         }));
+        
+        // Automatically send read receipt after a short delay (simulate reading time)
+        setTimeout(() => {
+          this.sendReadReceipt(message.message.id, message.message.senderId.id || message.message.senderId);
+        }, 1000);
       }
     } catch (error) {
       console.error('Error decrypting message:', error);
@@ -127,6 +138,19 @@ export class WebSocketService {
       senderId,
       recipientId,
       isTyping,
+    });
+  }
+
+  sendReadReceipt(messageId: string, senderId: string): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.currentUserId) {
+      return;
+    }
+
+    this.send({
+      type: 'messageRead',
+      messageId,
+      senderId,
+      readerId: this.currentUserId
     });
   }
 

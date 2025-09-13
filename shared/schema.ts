@@ -54,7 +54,10 @@ export const messages = pgTable("messages", {
   recipientId: varchar("recipient_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
   encryptedContent: text("encrypted_content").notNull(), // Encrypted message content
   iv: varchar("iv").notNull(), // Initialization vector for encryption
+  isDelivered: boolean("is_delivered").default(false),
   isRead: boolean("is_read").default(false),
+  deliveredAt: timestamp("delivered_at"),
+  readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -101,7 +104,10 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
 export const insertMessageSchema = createInsertSchema(messages).omit({
   id: true,
   createdAt: true,
+  isDelivered: true,
   isRead: true,
+  deliveredAt: true,
+  readAt: true,
 });
 
 // Types

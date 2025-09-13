@@ -85,12 +85,26 @@ export function ChatArea({ currentUser, selectedContact }: ChatAreaProps) {
       }
     };
 
+    const handleMessageDelivered = (data: any) => {
+      // Update the message in the cache to mark it as delivered
+      queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedContact?.contactUser.id] });
+    };
+
+    const handleMessageRead = (data: any) => {
+      // Update the message in the cache to mark it as read
+      queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedContact?.contactUser.id] });
+    };
+
     window.addEventListener('newMessage', handleNewMessage as EventListener);
     webSocketService.onMessage('typing', handleTyping);
+    webSocketService.onMessage('messageDelivered', handleMessageDelivered);
+    webSocketService.onMessage('messageRead', handleMessageRead);
 
     return () => {
       window.removeEventListener('newMessage', handleNewMessage as EventListener);
       webSocketService.offMessage('typing');
+      webSocketService.offMessage('messageDelivered');
+      webSocketService.offMessage('messageRead');
     };
   }, [selectedContact, queryClient]);
 

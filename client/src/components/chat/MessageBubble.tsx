@@ -79,9 +79,11 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
             <Shield className="w-3 h-3 text-primary" />
             <span data-testid="message-time">{formatTime(message.createdAt!)}</span>
             {message.isRead ? (
-              <CheckCheck className="w-3 h-3 text-primary" />
+              <CheckCheck className="w-3 h-3 text-primary" title="Read" />
+            ) : message.isDelivered ? (
+              <CheckCheck className="w-3 h-3 text-muted-foreground" title="Delivered" />
             ) : (
-              <Check className="w-3 h-3 text-muted-foreground" />
+              <Check className="w-3 h-3 text-muted-foreground" title="Sent" />
             )}
           </div>
         </div>
