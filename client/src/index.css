@@ -1,0 +1,125 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(210, 13%, 98%);
+  --foreground: hsl(210, 6%, 13%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(210, 6%, 13%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(210, 6%, 13%);
+  --primary: hsl(123, 39%, 33%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(200, 9%, 28%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(210, 13%, 98%);
+  --muted-foreground: hsl(210, 6%, 13%);
+  --accent: hsl(207, 73%, 44%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(356, 91%, 54%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 18%, 87%);
+  --input: hsl(210, 18%, 95%);
+  --ring: hsl(123, 39%, 33%);
+  --chart-1: hsl(123, 39%, 33%);
+  --chart-2: hsl(160, 100%, 36%);
+  --chart-3: hsl(42, 93%, 56%);
+  --chart-4: hsl(147, 79%, 42%);
+  --chart-5: hsl(341, 75%, 51%);
+  --sidebar: hsl(0, 0%, 100%);
+  --sidebar-foreground: hsl(210, 6%, 13%);
+  --sidebar-primary: hsl(123, 39%, 33%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(210, 18%, 87%);
+  --sidebar-accent-foreground: hsl(123, 39%, 33%);
+  --sidebar-border: hsl(210, 18%, 87%);
+  --sidebar-ring: hsl(123, 39%, 33%);
+  --font-sans: "Roboto", system-ui, -apple-system, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: "Roboto Mono", monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 1px 2px 0px rgba(46, 125, 50, 0.05);
+  --shadow-xs: 0px 1px 2px 0px rgba(46, 125, 50, 0.05);
+  --shadow-sm: 0px 1px 3px 0px rgba(46, 125, 50, 0.1), 0px 1px 2px -1px rgba(46, 125, 50, 0.1);
+  --shadow: 0px 1px 3px 0px rgba(46, 125, 50, 0.1), 0px 1px 2px -1px rgba(46, 125, 50, 0.1);
+  --shadow-md: 0px 4px 6px -1px rgba(46, 125, 50, 0.1), 0px 2px 4px -2px rgba(46, 125, 50, 0.1);
+  --shadow-lg: 0px 10px 15px -3px rgba(46, 125, 50, 0.1), 0px 4px 6px -4px rgba(46, 125, 50, 0.1);
+  --shadow-xl: 0px 20px 25px -5px rgba(46, 125, 50, 0.1), 0px 8px 10px -6px rgba(46, 125, 50, 0.1);
+  --shadow-2xl: 0px 25px 50px -12px rgba(46, 125, 50, 0.25);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+.dark {
+  --background: hsl(210, 6%, 13%);
+  --foreground: hsl(210, 13%, 98%);
+  --card: hsl(210, 9%, 18%);
+  --card-foreground: hsl(210, 13%, 98%);
+  --popover: hsl(210, 9%, 18%);
+  --popover-foreground: hsl(210, 13%, 98%);
+  --primary: hsl(123, 39%, 43%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(200, 9%, 38%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --muted: hsl(210, 9%, 18%);
+  --muted-foreground: hsl(210, 13%, 65%);
+  --accent: hsl(207, 73%, 54%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(356, 91%, 54%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(210, 9%, 25%);
+  --input: hsl(210, 9%, 22%);
+  --ring: hsl(123, 39%, 43%);
+  --chart-1: hsl(123, 39%, 43%);
+  --chart-2: hsl(160, 100%, 46%);
+  --chart-3: hsl(42, 93%, 66%);
+  --chart-4: hsl(147, 79%, 52%);
+  --chart-5: hsl(341, 75%, 61%);
+  --sidebar: hsl(210, 9%, 18%);
+  --sidebar-foreground: hsl(210, 13%, 98%);
+  --sidebar-primary: hsl(123, 39%, 43%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(210, 9%, 25%);
+  --sidebar-accent-foreground: hsl(123, 39%, 43%);
+  --sidebar-border: hsl(210, 9%, 25%);
+  --sidebar-ring: hsl(123, 39%, 43%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+.message-bubble-sent {
+  background: linear-gradient(135deg, hsl(123, 39%, 33%) 0%, hsl(123, 39%, 45%) 100%);
+}
+
+.message-bubble-received {
+  background: hsl(0, 0%, 100%);
+  border: 1px solid hsl(210, 18%, 87%);
+}
+
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(123, 39%, 33%) transparent;
+}
+
+.chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+  background-color: hsl(123, 39%, 33%);
+  border-radius: 3px;
+}
