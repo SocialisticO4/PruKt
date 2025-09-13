@@ -7,6 +7,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Simple health endpoint for platform checks
+app.get("/health", (_req, res) => {
+  res.json({ ok: true });
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -48,6 +53,24 @@ app.use((req, res, next) => {
     const pinRooms = new Map<string, Set<WebSocket>>();
     const socketToPin = new Map<WebSocket, string>();
 
+    // Keepalive to prevent idle disconnects
+    const pingInterval = setInterval(() => {
+      for (const ws of p2pWss.clients) {
+        const sock: any = ws as any;
+        if (sock.isAlive === false) {
+          try {
+            ws.terminate();
+          } catch {}
+          continue;
+        }
+        sock.isAlive = false;
+        try {
+          ws.ping();
+        } catch {}
+      }
+    }, 30000);
+    p2pWss.on("close", () => clearInterval(pingInterval));
+
     const sendJson = (socket: WebSocket, payload: any) => {
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(payload));
@@ -55,6 +78,10 @@ app.use((req, res, next) => {
     };
 
     p2pWss.on("connection", (ws: WebSocket) => {
+      (ws as any).isAlive = true;
+      ws.on("pong", () => {
+        (ws as any).isAlive = true;
+      });
       ws.on("message", (data) => {
         let msg: any;
         try {

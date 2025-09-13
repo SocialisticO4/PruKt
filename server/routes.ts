@@ -7,6 +7,8 @@ import { insertContactSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Simple health endpoint
+  app.get("/health", (_req, res) => res.json({ ok: true }));
   // Auth middleware
   await setupAuth(app);
 
@@ -180,7 +182,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
   const clients = new Map<string, WebSocket>();
 
+  // Keepalive for /ws
+  const wsPingInterval = setInterval(() => {
+    for (const ws of wss.clients) {
+      const sock: any = ws as any;
+      if (sock.isAlive === false) {
+        try {
+          ws.terminate();
+        } catch {}
+        continue;
+      }
+      sock.isAlive = false;
+      try {
+        ws.ping();
+      } catch {}
+    }
+  }, 30000);
+  wss.on("close", () => clearInterval(wsPingInterval));
+
   wss.on("connection", (ws: WebSocket, req) => {
+    (ws as any).isAlive = true;
+    ws.on("pong", () => {
+      (ws as any).isAlive = true;
+    });
     console.log("New WebSocket connection");
 
     ws.on("message", async (data) => {
@@ -304,6 +328,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const pinRooms = new Map<string, Set<WebSocket>>();
   const socketToPin = new Map<WebSocket, string>();
 
+  // Keepalive for /p2p
+  const p2pPingInterval = setInterval(() => {
+    for (const ws of p2pWss.clients) {
+      const sock: any = ws as any;
+      if (sock.isAlive === false) {
+        try {
+          ws.terminate();
+        } catch {}
+        continue;
+      }
+      sock.isAlive = false;
+      try {
+        ws.ping();
+      } catch {}
+    }
+  }, 30000);
+  p2pWss.on("close", () => clearInterval(p2pPingInterval));
+
   const sendJson = (socket: WebSocket, payload: any) => {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(payload));
@@ -311,6 +353,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   p2pWss.on("connection", (ws: WebSocket) => {
+    (ws as any).isAlive = true;
+    ws.on("pong", () => {
+      (ws as any).isAlive = true;
+    });
     ws.on("message", (data) => {
       let msg: any;
       try {
